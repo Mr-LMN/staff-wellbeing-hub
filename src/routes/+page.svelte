@@ -1,14 +1,53 @@
 <script lang="ts">
-  const name = 'Lloyd';
-  const currentWeight = 92.3;
-  const startWeight = 95;
-  const change = currentWeight - startWeight;
+  import { onMount } from 'svelte';
+  import { user } from '$lib/stores/user';
+  import { db } from '$lib/firestore';
+  import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
 
-  const changeText =
-    change < 0 ? `${Math.abs(change).toFixed(1)}kg down` : `${change.toFixed(1)}kg up`;
-
-  const tip =
+  let name = 'Staff member';
+  let currentWeight: number | null = null;
+  let startWeight: number | null = null;
+  let changeText = 'No data yet';
+  let tip =
     'Take one 10-minute walk between lessons this week. Small wins add up.';
+
+  $: loggedInUser = $user;
+
+  onMount(async () => {
+    const u = $user;
+    if (!u) return;
+
+    name = u.email?.split('@')[0] ?? 'Staff member';
+
+    const q = query(
+      collection(db, 'checkins'),
+      where('userId', '==', u.uid),
+      orderBy('createdAt', 'asc')
+    );
+    const snap = await getDocs(q);
+    const docs = snap.docs.map((d) => d.data() as any);
+
+    if (docs.length > 0) {
+      const firstWeight = docs[0].weightKg as number;
+      const latestWeight = docs[docs.length - 1].weightKg as number;
+
+      startWeight = firstWeight;
+      currentWeight = latestWeight;
+
+      const diff = latestWeight - firstWeight;
+      if (diff < 0) {
+        changeText = `${Math.abs(diff).toFixed(1)}kg down since you started`;
+      } else if (diff > 0) {
+        changeText = `${diff.toFixed(1)}kg up since you started`;
+      } else {
+        changeText = 'Same as your starting weight';
+      }
+    } else {
+      startWeight = null;
+      currentWeight = null;
+      changeText = 'No check-ins yet';
+    }
+  });
 </script>
 
 <div class="space-y-6">
@@ -23,9 +62,19 @@
   <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
     <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow">
       <p class="text-xs text-slate-400 uppercase">This Week</p>
-      <p class="text-3xl mt-2 font-bold">{currentWeight}kg</p>
+      <p class="text-3xl mt-2 font-bold">
+        {#if currentWeight !== null}
+          {currentWeight}kg
+        {:else}
+          —
+        {/if}
+      </p>
       <p class="text-sm text-slate-400">Current logged weight</p>
-      <p class="mt-4 text-sm text-emerald-400">{changeText}</p>
+      <p
+        class="mt-4 text-sm {currentWeight !== null && startWeight !== null && currentWeight < startWeight ? 'text-emerald-400' : 'text-slate-300'}"
+      >
+        {changeText}
+      </p>
     </div>
 
     <div class="p-4 rounded-2xl bg-slate-900 border border-slate-800 shadow flex flex-col justify-between">
