@@ -1,5 +1,7 @@
 <script>
+  import { goto } from '$app/navigation';
   import { page } from '$app/stores';
+  import { logout } from '$lib/auth';
   import { user } from '$lib/stores/user';
 
   const links = [
@@ -9,6 +11,11 @@
     { href: '/nutrition', label: 'Nutrition' },
     { href: '/stories', label: 'Stories' }
   ];
+
+  const handleLogout = async () => {
+    await logout();
+    goto('/login');
+  };
 </script>
 
 <div class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
@@ -25,9 +32,16 @@
       </div>
 
       {#if $user}
-        <div class="flex items-center gap-3 text-xs md:text-sm text-slate-300">
-          <span class="truncate max-w-[180px]">{$user?.email ?? 'Account'}</span>
-          <a href="/logout" class="hover:text-white">Log out</a>
+        <div class="flex items-center gap-3">
+          <span class="hidden md:inline text-xs text-slate-300">
+            {$user.email}
+          </span>
+          <button
+            class="text-xs md:text-sm text-slate-300 hover:text-white"
+            on:click|preventDefault={handleLogout}
+          >
+            Log out
+          </button>
         </div>
       {:else}
         <a href="/login" class="text-xs md:text-sm text-slate-300 hover:text-white">

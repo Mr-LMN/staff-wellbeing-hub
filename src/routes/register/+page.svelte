@@ -1,22 +1,33 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { loginWithEmail } from '$lib/auth';
+  import { registerWithEmail } from '$lib/auth';
 
   let email = '';
   let password = '';
+  let confirmPassword = '';
   let error: string | null = null;
   let loading = false;
 
-  const handleSubmit = async () => {
+  const handleRegister = async () => {
     error = null;
+
+    if (password.length < 6) {
+      error = 'Password must be at least 6 characters.';
+      return;
+    }
+    if (password !== confirmPassword) {
+      error = 'Passwords do not match.';
+      return;
+    }
+
     loading = true;
     try {
-      await loginWithEmail(email.trim(), password);
+      await registerWithEmail(email.trim(), password);
       goto('/');
     } catch (err) {
       console.error(err);
       error =
-        err instanceof Error ? err.message : 'Login failed. Please check your details and try again.';
+        err instanceof Error ? err.message : 'Registration failed. Please try again.';
     } finally {
       loading = false;
     }
@@ -29,13 +40,13 @@
       <p class="text-xs font-semibold tracking-wide text-emerald-400 uppercase">
         Pencoedtre High School
       </p>
-      <h1 class="text-xl font-semibold">Staff Wellbeing Hub</h1>
+      <h1 class="text-xl font-semibold">Create your account</h1>
       <p class="text-sm text-slate-400">
-        Sign in with your <span class="font-mono">@phschool.co.uk</span> email.
+        Use your <span class="font-mono">@phschool.co.uk</span> staff email.
       </p>
     </div>
 
-    <form class="space-y-3" on:submit|preventDefault={handleSubmit}>
+    <form class="space-y-3" on:submit|preventDefault={handleRegister}>
       <div class="space-y-1">
         <label class="text-xs font-medium text-slate-300">Email</label>
         <input
@@ -58,6 +69,17 @@
         />
       </div>
 
+      <div class="space-y-1">
+        <label class="text-xs font-medium text-slate-300">Confirm password</label>
+        <input
+          class="w-full rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-sm outline-none focus:border-emerald-500"
+          type="password"
+          bind:value={confirmPassword}
+          minlength="6"
+          required
+        />
+      </div>
+
       {#if error}
         <p class="text-xs text-red-400">{error}</p>
       {/if}
@@ -67,13 +89,13 @@
         class="w-full inline-flex items-center justify-center rounded-xl border border-slate-700 bg-emerald-500 px-4 py-2.5 text-sm font-medium text-slate-950 hover:bg-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-60"
         disabled={loading}
       >
-        {loading ? 'Signing you in...' : 'Log in'}
+        {loading ? 'Creating account...' : 'Create account'}
       </button>
     </form>
 
-    <div class="mt-4 flex justify-between text-[11px] text-slate-400">
-      <a href="/register" class="hover:text-slate-200">Create account</a>
-      <a href="/forgot-password" class="hover:text-slate-200">Forgot password?</a>
-    </div>
+    <p class="mt-4 text-[11px] text-slate-400 text-center">
+      Already have an account?
+      <a href="/login" class="hover:text-slate-200">Log in</a>
+    </p>
   </div>
 </div>
