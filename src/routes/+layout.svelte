@@ -1,5 +1,6 @@
 <script>
   import { page } from '$app/stores';
+  import { user } from '$lib/stores/user';
 
   const links = [
     { href: '/', label: 'Dashboard' },
@@ -23,9 +24,16 @@
         </div>
       </div>
 
-      <a href="/login" class="text-xs md:text-sm text-slate-300 hover:text-white">
-        Log in
-      </a>
+      {#if $user}
+        <div class="flex items-center gap-3 text-xs md:text-sm text-slate-300">
+          <span class="truncate max-w-[180px]">{$user?.email ?? 'Account'}</span>
+          <a href="/logout" class="hover:text-white">Log out</a>
+        </div>
+      {:else}
+        <a href="/login" class="text-xs md:text-sm text-slate-300 hover:text-white">
+          Log in
+        </a>
+      {/if}
     </div>
   </header>
 
