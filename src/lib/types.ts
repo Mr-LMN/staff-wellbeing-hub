@@ -14,3 +14,12 @@ export interface WeightCheckin {
   weightKg: number;
   createdAt: string; // ISO string
 }
+
+export interface NewsItem {
+  id?: string;
+  title: string;
+  body?: string;
+  createdAt: string; // ISO string
+  ctaLabel?: string;
+  ctaUrl?: string;
+}

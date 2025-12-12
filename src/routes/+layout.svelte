@@ -21,7 +21,7 @@
 <div class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
   <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur">
     <div class="mx-auto max-w-5xl flex items-center justify-between px-4 py-3">
-      <div class="flex items-center gap-2">
+      <a href="/" class="flex items-center gap-2 hover:opacity-90 transition-opacity">
         <div class="h-8 w-8 rounded-xl bg-emerald-500 flex items-center justify-center text-xs font-bold text-slate-900">
           PHS
         </div>
@@ -29,13 +29,14 @@
           <p class="text-sm font-semibold">Staff Wellbeing Hub</p>
           <p class="text-xs text-slate-400">Pencoedtre High School</p>
         </div>
-      </div>
+      </a>
 
       {#if $user}
         <div class="flex items-center gap-3">
           <span class="hidden md:inline text-xs text-slate-300">
             {$user.email}
           </span>
+          <a href="/" class="hidden md:inline text-xs md:text-sm text-slate-300 hover:text-white">Home</a>
           <button
             class="text-xs md:text-sm text-slate-300 hover:text-white"
             on:click|preventDefault={handleLogout}
@@ -44,9 +45,10 @@
           </button>
         </div>
       {:else}
-        <a href="/login" class="text-xs md:text-sm text-slate-300 hover:text-white">
-          Log in
-        </a>
+        <div class="flex items-center gap-3">
+          <a href="/" class="text-xs md:text-sm text-slate-300 hover:text-white">Home</a>
+          <a href="/login" class="text-xs md:text-sm text-slate-300 hover:text-white">Log in</a>
+        </div>
       {/if}
     </div>
   </header>
