@@ -14,7 +14,7 @@
   } from 'firebase/firestore';
   import type { NewsItem } from '$lib/types';
 
-  const ALLOWED_ADMINS = ['your.email@phschool.co.uk'];
+  const ALLOWED_ADMINS = ['l.martin@phschool.co.uk'];
 
   let title = '';
   let category: NewsItem['category'] = 'general';
