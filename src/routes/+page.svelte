@@ -3,6 +3,7 @@
   import { user } from '$lib/stores/user';
   import { db } from '$lib/firestore';
   import { collection, getDocs, orderBy, query, where } from 'firebase/firestore';
+  import type { NewsItem } from '$lib/types';
 
   let name = 'Staff member';
   let currentWeight: number | null = null;
@@ -10,43 +11,63 @@
   let changeText = 'No data yet';
   let tip =
     'Take one 10-minute walk between lessons this week. Small wins add up.';
+  let news: NewsItem[] = [];
 
   $: loggedInUser = $user;
 
+  const formatNewsDate = (iso: string) => {
+    const d = new Date(iso);
+    return d.toLocaleDateString(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
   onMount(async () => {
     const u = $user;
-    if (!u) return;
+    if (u) {
+      name = u.email?.split('@')[0] ?? 'Staff member';
 
-    name = u.email?.split('@')[0] ?? 'Staff member';
+      const q = query(
+        collection(db, 'checkins'),
+        where('userId', '==', u.uid),
+        orderBy('createdAt', 'asc')
+      );
+      const snap = await getDocs(q);
+      const docs = snap.docs.map((d) => d.data() as any);
 
-    const q = query(
-      collection(db, 'checkins'),
-      where('userId', '==', u.uid),
-      orderBy('createdAt', 'asc')
-    );
-    const snap = await getDocs(q);
-    const docs = snap.docs.map((d) => d.data() as any);
+      if (docs.length > 0) {
+        const firstWeight = docs[0].weightKg as number;
+        const latestWeight = docs[docs.length - 1].weightKg as number;
 
-    if (docs.length > 0) {
-      const firstWeight = docs[0].weightKg as number;
-      const latestWeight = docs[docs.length - 1].weightKg as number;
+        startWeight = firstWeight;
+        currentWeight = latestWeight;
 
-      startWeight = firstWeight;
-      currentWeight = latestWeight;
-
-      const diff = latestWeight - firstWeight;
-      if (diff < 0) {
-        changeText = `${Math.abs(diff).toFixed(1)}kg down since you started`;
-      } else if (diff > 0) {
-        changeText = `${diff.toFixed(1)}kg up since you started`;
+        const diff = latestWeight - firstWeight;
+        if (diff < 0) {
+          changeText = `${Math.abs(diff).toFixed(1)}kg down since you started`;
+        } else if (diff > 0) {
+          changeText = `${diff.toFixed(1)}kg up since you started`;
+        } else {
+          changeText = 'Same as your starting weight';
+        }
       } else {
-        changeText = 'Same as your starting weight';
+        startWeight = null;
+        currentWeight = null;
+        changeText = 'No check-ins yet';
       }
-    } else {
-      startWeight = null;
-      currentWeight = null;
-      changeText = 'No check-ins yet';
     }
+
+    const nq = query(
+      collection(db, 'news'),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(nq);
+    news = snap.docs.map((d) => ({
+      id: d.id,
+      ...(d.data() as any)
+    }));
   });
 </script>
 
@@ -124,4 +145,37 @@
       <p class="text-slate-300 text-sm font-medium mt-4">View stories →</p>
     </a>
   </div>
+
+  <section class="space-y-2 mt-4">
+    <h2 class="text-sm font-semibold text-slate-200">Latest updates</h2>
+    {#if news.length === 0}
+      <p class="text-sm text-slate-400">
+        No updates yet. Check back soon for staff circuits bookings, new recipes, and wellbeing tips.
+      </p>
+    {:else}
+      <div class="space-y-2">
+        {#each news as item}
+          <article class="rounded-2xl bg-slate-900 border border-slate-800 p-4 space-y-1">
+            <h3 class="text-sm font-semibold text-slate-100">{item.title}</h3>
+            {#if item.body}
+              <p class="text-sm text-slate-400">{item.body}</p>
+            {/if}
+            <div class="flex justify-between items-center mt-1 text-xs text-slate-500">
+              <span>{formatNewsDate(item.createdAt)}</span>
+              {#if item.ctaLabel && item.ctaUrl}
+                <a
+                  href={item.ctaUrl}
+                  class="text-emerald-400 hover:text-emerald-300 font-medium"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  {item.ctaLabel} →
+                </a>
+              {/if}
+            </div>
+          </article>
+        {/each}
+      </div>
+    {/if}
+  </section>
 </div>
