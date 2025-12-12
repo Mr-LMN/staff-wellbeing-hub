@@ -18,8 +18,12 @@ export interface WeightCheckin {
 export interface NewsItem {
   id?: string;
   title: string;
-  body?: string;
+  body: string; // markdown text
   createdAt: string; // ISO string
+  category: 'nutrition' | 'exercise' | 'workouts' | 'general';
+  tags: string[]; // e.g. ["recipe", "family"]
+  pinToBanner: boolean;
   ctaLabel?: string;
   ctaUrl?: string;
+  heroImageUrl?: string;
 }
